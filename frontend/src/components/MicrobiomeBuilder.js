@@ -119,7 +119,7 @@ export default function MicrobiomeBuilder() {
       const result = await response.json();
       alert("Success: " + result.message);
       const encodedSetup = encodeURIComponent(setup);
-      //window.location.href = `http://localhost:8501/?setup=${encodedSetup}`;
+      window.location.href = `http://localhost:8501/?setup=${encodedSetup}`;
     } catch (err) {
       console.error("Failed to save data:", err);
       alert("Failed to save data.");
