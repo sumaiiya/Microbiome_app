@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./simulation_envs/scripts/db",
+        "./simulation_envs/scripts/core"
+    ]
+}

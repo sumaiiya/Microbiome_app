@@ -1,0 +1,188 @@
+/* Center container - full viewport, flexbox centering */
+.app-wrapper {
+  min-height: 100vh;          /* Full viewport height */
+  display: flex;
+  justify-content: center;    /* Horizontal center */
+  align-items: center;        /* Vertical center */
+  background-color: #f5f7fa; /* Light neutral background */
+  padding: 1rem;
+}
+
+/* Inner container - white card with shadow */
+.microbiome-container {
+  width: 100%;
+  max-width: 900px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  padding: 2rem;
+  overflow-y: auto;
+  max-height: 90vh; /* prevent overflow outside viewport */
+}
+
+/* Scroll if content is tall */
+.microbiome-container::-webkit-scrollbar {
+  width: 8px;
+}
+.microbiome-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+
+/* Overall container */
+.microbiome-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #fff;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgb(0 0 0 / 0.05);
+}
+
+/* Headings */
+.microbiome-container h1,
+.microbiome-container h2,
+.microbiome-container h3,
+.microbiome-container h4,
+.microbiome-container h5 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #111;
+}
+
+/* Inputs */
+.microbiome-container input[type="text"],
+.microbiome-container input[type="number"],
+.microbiome-container select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.microbiome-container input[type="text"]:focus,
+.microbiome-container input[type="number"]:focus,
+.microbiome-container select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 5px rgb(59 130 246 / 0.3);
+}
+
+/* Buttons */
+.microbiome-container button {
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.microbiome-container button.primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.microbiome-container button.primary:hover {
+  background-color: #2563eb;
+}
+
+.microbiome-container button.secondary {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.microbiome-container button.secondary:hover {
+  background-color: #d1d5db;
+}
+
+.microbiome-container button.danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.microbiome-container button.danger:hover {
+  background-color: #b91c1c;
+}
+
+/* Layout */
+.section {
+  margin-bottom: 2rem;
+}
+
+.border-box {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+  background: #fafafa;
+  margin-bottom: 1rem;
+}
+
+.flex-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+/* Color input smaller */
+input[type="color"] {
+  width: 40px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.subpopulation-card {
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 1rem;
+}
+
+.subpopulation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.subpopulation-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.feeding-card {
+  border: 1px dashed #ccc;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  background: #fff;
+}
+
+.inout-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
