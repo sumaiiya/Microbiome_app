@@ -165,6 +165,27 @@ input[type="color"] {
   margin-bottom: 0.5rem;
 }
 
+/* Style select to look like inputs */
+select {
+  height: 2rem;           /* same height as input with p-1 padding */
+  padding: 0.25rem 0.5rem; /* reduce vertical padding */
+  font-size: 1rem;        /* match input font size */
+  line-height: 1.5;       /* align text nicely */
+  border: 1px solid #ccc; /* same border */
+  border-radius: 0.25rem; /* rounded corners */
+  width: 100%;            /* full width like inputs */
+  box-sizing: border-box; /* include padding in width */
+  margin-bottom: 0.25rem; /* similar to mb-1 */
+}
+
+/* Optional: remove extra vertical spacing */
+select:focus {
+  outline: none;
+  border-color: #3182ce; /* blue focus */
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+
 .feeding-card {
   border: 1px dashed #ccc;
   padding: 0.75rem;

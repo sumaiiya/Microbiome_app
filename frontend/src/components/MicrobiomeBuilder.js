@@ -1,13 +1,39 @@
 import React, { useState } from "react";
 import "./MicrobiomeBuilder.css";
+import { useNavigate } from "react-router-dom";
 
 export default function MicrobiomeBuilder() {
+  const navigate = useNavigate();
   const [model, setModel] = useState("");
   const [setup, setSetup] = useState("Kombucha");
   const [species, setSpecies] = useState([]);
   const [media, setMedia] = useState([]);
   const [metabolites, setMetabolites] = useState([]);
+  const handleClearMicrobiome = async () => {
+    if (!window.confirm("Are you sure you want to clear all microbiome data? This cannot be undone.")) {
+      return;
+    }
 
+    try {
+      const response = await fetch("http://localhost:5000/api/clear_microbiome", {
+        method: "POST",
+      });
+      const result = await response.json();
+      if (result.status === "success") {
+        alert("Microbiome data cleared on server.");
+        // Clear local frontend state as well:
+        setSpecies([]);
+        setMedia([]);
+        setMetabolites([]);
+        setModel("");
+        setSetup("Kombucha"); // or empty string if you prefer
+      } else {
+        alert("Error clearing data: " + result.message);
+      }
+    } catch (err) {
+      alert("Network error: " + err.message);
+    }
+  };
   const handleAddSpecies = () => {
     setSpecies([...species, {
       id: "", name: "", color: "#ff6600", subpopulations: [],
@@ -70,7 +96,18 @@ export default function MicrobiomeBuilder() {
 
   const handleUpdateInOut = (speciesIndex, subIndex, termIndex, type, itemIndex, field, value) => {
     const updated = [...species];
-    updated[speciesIndex].subpopulations[subIndex].feeding[termIndex][type][itemIndex][field] = value;
+    let newValue = value;
+
+    if (field === "yield") {
+      const numericValue = parseFloat(value) || 0;
+      newValue = type === "in" ? -Math.abs(numericValue) : Math.abs(numericValue); // Force sign
+    }
+
+    if (field === "monodK" && type === "out") {
+      newValue = 0; 
+    }
+
+    updated[speciesIndex].subpopulations[subIndex].feeding[termIndex][type][itemIndex][field] = newValue;
     setSpecies(updated);
   };
 
@@ -118,17 +155,29 @@ export default function MicrobiomeBuilder() {
       });
       const result = await response.json();
       alert("Success: " + result.message);
+      // 🔀 Navigate to the reactor page
+      //navigate("/reactor");
+      navigate("/reactor", { state: { setup } });
+
       const encodedSetup = encodeURIComponent(setup);
-      window.location.href = `http://localhost:8501/?setup=${encodedSetup}`;
+      //window.location.href = `http://localhost:8501/?setup=${encodedSetup}`;
     } catch (err) {
       console.error("Failed to save data:", err);
       alert("Failed to save data.");
+      
     }
   };
 
   return (
     <div className="app-wrapper">
+      
       <div className="microbiome-container">
+        <button
+  className="bg-red-700 text-white px-6 py-3 rounded mt-4 mb-6"
+  onClick={handleClearMicrobiome}
+>
+  Clear Data
+</button>
         <h1 className="text-2xl font-bold">Microbiome Environment Builder</h1>
 
         {/* Model + Setup */}
@@ -188,13 +237,22 @@ export default function MicrobiomeBuilder() {
                   <input className="border p-1 mb-1 w-full" placeholder="Subpopulation id"
                     value={sub.name} onChange={(e) => handleUpdateSubpop(sIndex, subIndex, "id", e.target.value)} />
                   <input className="border p-1 mb-1 w-full" placeholder="Count"
-                    value={sub.count} onChange={(e) => handleUpdateSubpop(sIndex, subIndex, "count", e.target.value)} />
+                    value={sub.count || 0} disabled />
                   <input className="border p-1 mb-1 w-full" placeholder="mumax"
                     value={sub.mumax} onChange={(e) => handleUpdateSubpop(sIndex, subIndex, "mumax", e.target.value)} />
                   <input className="border p-1 mb-1 w-full" placeholder="pHopt"
                     value={sub.pHopt} onChange={(e) => handleUpdateSubpop(sIndex, subIndex, "pHopt", e.target.value)} />
                   <input className="border p-1 mb-1 w-full" placeholder="pHalpha"
                     value={sub.pHalpha} onChange={(e) => handleUpdateSubpop(sIndex, subIndex, "pHalpha", e.target.value)} />
+                  <select
+                    className="border p-1 mb-1 w-full"
+                    value={sub.state || "active"}
+                    onChange={(e) => handleUpdateSubpop(sIndex, subIndex, "state", e.target.value)}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    
+                  </select>
 
                   {/* Feeding terms */}
                   <div className="mt-3">
@@ -237,9 +295,8 @@ export default function MicrobiomeBuilder() {
                             <input className="border p-2 flex-1" placeholder="Yield"
                               value={item.yield}
                               onChange={(e) => handleUpdateInOut(sIndex, subIndex, termIndex, "out", i, "yield", e.target.value)} />
-                            <input className="border p-2 flex-1" placeholder="MonodK"
-                              value={item.monodK}
-                              onChange={(e) => handleUpdateInOut(sIndex, subIndex, termIndex, "out", i, "monodK", e.target.value)} />
+                             <input className="border p-2 flex-1 bg-gray-200 cursor-not-allowed" placeholder="MonodK"
+      value={0} disabled />
                             <button className="bg-red-600 text-white px-2 py-1 rounded"
                               onClick={() => handleRemoveInOut(sIndex, subIndex, termIndex, "out", i)}>Remove</button>
                           </div>
@@ -265,44 +322,8 @@ export default function MicrobiomeBuilder() {
             onClick={handleAddSpecies}>+ Add Species</button>
         </div>
 
-        {/* Media */}
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Media</h2>
-          {media.map((item, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input className="border p-2 flex-1" placeholder="Metabolite"
-                value={item.metabolite} onChange={(e) => handleUpdateMedia(index, "metabolite", e.target.value)} />
-              <input className="border p-2 flex-1" placeholder="Concentration"
-                value={item.concentration} onChange={(e) => handleUpdateMedia(index, "concentration", e.target.value)} />
-              <button className="bg-red-600 text-white px-3 py-1 rounded"
-                onClick={() => handleRemoveMedia(index)}>Remove</button>
-            </div>
-          ))}
-          <button className="bg-green-600 text-white px-4 py-2 rounded"
-            onClick={handleAddMedia}>+ Add Media</button>
-        </div>
-
-        {/* Metabolites */}
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Metabolites</h2>
-          {metabolites.map((m, index) => (
-            <div key={index} className="flex gap-2 mb-2 items-center">
-              <input className="border p-2 flex-1" placeholder="Metabolite ID"
-                value={m.id} onChange={(e) => handleUpdateMetabolite(index, "id", e.target.value)} />
-              <input type="color" value={m.color}
-                onChange={(e) => handleUpdateMetabolite(index, "color", e.target.value)} />
-              <input className="border p-2 flex-1" placeholder="Molecular Weight"
-                value={m.MolecularWeight} onChange={(e) => handleUpdateMetabolite(index, "MolecularWeight", e.target.value)} />
-              <button className="bg-red-600 text-white px-3 py-1 rounded"
-                onClick={() => handleRemoveMetabolite(index)}>Remove</button>
-            </div>
-          ))}
-          <button className="bg-green-600 text-white px-4 py-2 rounded"
-            onClick={handleAddMetabolite}>+ Add Metabolite</button>
-        </div>
-
         <button className="bg-black text-white px-6 py-3 rounded mt-6"
-          onClick={handleSubmit}>Create Reactor</button>
+          onClick={handleSubmit}>Save Microbiome</button>
       </div>
     </div>
   );

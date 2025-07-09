@@ -38,7 +38,7 @@ try:
     #DATABASEFOLDER = os.path.join(BASE_DIR, 'simulation_envs', 'files', 'db_tables')
     #DATABASENAME = 'kombuchaDB_colab.sqlite3'
     DATABASEFOLDER = os.path.abspath(os.path.join(BASE_DIR, '..', 'backend'))
-    DATABASENAME = 'microbiomeglobal.sqlite3'
+    DATABASENAME = 'microbiomeTest.sqlite3'
     
     if os.path.exists(os.path.join(DATABASEFOLDER, DATABASENAME)):
         DB = get_database(os.path.join(DATABASEFOLDER, DATABASENAME))
@@ -51,7 +51,7 @@ except ImportError as e:
     ACTUAL_DB_AVAILABLE = False
 
 # Simulation parameters
-param_max_steps = 500
+param_max_steps = 240
 param_dilution = 0.5
 param_volume = 100
 param_max_dilution = 60
@@ -96,17 +96,15 @@ def reward_function(reactor):
     target_ethanol = param_target_ethanol
 
     try:
-        print(f"[DEBUG] metabolites: {reactor.metabolome.metabolites}")
         ethanol_idx = reactor.metabolome.metabolites.index('ethanol')
         ethanol_conc = reactor.metabolome.concentration[ethanol_idx]
-        print(f"[DEBUG] ethanol concentration: {ethanol_conc}")
+
         # Normalize deviation and invert: max reward = 1.0 at target
         deviation = abs(ethanol_conc - target_ethanol)
         reward = max(0.0, 1 - deviation / target_ethanol)  # between 0 and 1
 
         return reward
     except (ValueError, IndexError):
-        
         return 0.0  # lowest reward if ethanol not found
 
 class KombuchaGymAction(Enum):
@@ -182,7 +180,7 @@ class KombuchaGym(gym.Env):
         return np.array(states, dtype=np.float32)
 
     def step(self, action):
-        
+        """Step function - exact copy from your original code"""
         self.current_step += 1
 
         action_enum = KombuchaGymAction(action)
@@ -205,14 +203,6 @@ class KombuchaGym(gym.Env):
             
         self.reactor = Reactor(microbiome, metabolome, pulse, self.volume)
         self.reactor.simulate()
-        print(f"[DEBUG] metabolites: {self.reactor.metabolome.metabolites}")
-        if 'ethanol' in self.reactor.metabolome.metabolites:
-            ethanol_idx = self.reactor.metabolome.metabolites.index('ethanol')
-            ethanol_conc = self.reactor.metabolome.concentration[ethanol_idx]
-            print(f"[DEBUG] ethanol concentration: {ethanol_conc}")
-        else:
-            print("[DEBUG] ethanol not found in metabolites")
-
 
         subpop_counts = {k: v.count for k, v in self.reactor.microbiome.subpopD.items()}
         current_pH = getpH(self.reactor.metabolome.concentration)

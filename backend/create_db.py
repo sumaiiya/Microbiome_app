@@ -10,16 +10,6 @@ def create_database(database_path):
     con = sqlite3.connect(database_path)
     cur = con.cursor()
 
-   
-
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS reactors (
-        id TEXT PRIMARY KEY NOT NULL UNIQUE,
-        model TEXT NOT NULL,
-        setup TEXT NOT NULL
-    )
-    """)
-
     cur.execute("""
     CREATE TABLE IF NOT EXISTS elements (
         id TEXT PRIMARY KEY NOT NULL UNIQUE,
@@ -29,12 +19,9 @@ def create_database(database_path):
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS metabolites (
-        id TEXT NOT NULL,
+        id TEXT PRIMARY KEY NOT NULL UNIQUE,
         color TEXT NOT NULL,
-        MolecularWeight REAL NOT NULL,
-        reactor TEXT NOT NULL,
-        PRIMARY KEY (id, reactor),
-        FOREIGN KEY (reactor) REFERENCES reactors (id)
+        MolecularWeight REAL NOT NULL
     )""")
 
     cur.execute("""
@@ -49,12 +36,9 @@ def create_database(database_path):
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS kombucha_media (
-        metabolite TEXT NOT NULL,
+        metabolite TEXT PRIMARY KEY UNIQUE,
         concentration REAL NOT NULL,
-        reactor TEXT NOT NULL,
-        PRIMARY KEY (metabolite, reactor),
-        FOREIGN KEY (metabolite, reactor) REFERENCES metabolites (id, reactor),
-        FOREIGN KEY (reactor) REFERENCES reactors (id)
+        FOREIGN KEY (metabolite) REFERENCES metabolites (id)
     )""")
 
     cur.execute("""
@@ -65,9 +49,7 @@ def create_database(database_path):
         geneNumber INTEGER,
         patricID TEXT,
         ncbiID TEXT,
-        color TEXT,
-        reactor TEXT NOT NULL,
-        FOREIGN KEY (reactor) REFERENCES reactors (id)
+        color TEXT
     )""")
 
     cur.execute("""
@@ -83,11 +65,10 @@ def create_database(database_path):
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         feedingTerm TEXT NOT NULL,
         metabolite TEXT NOT NULL,
-        reactor TEXT NOT NULL,
         yield REAL NOT NULL,
         monodK REAL NOT NULL,
         FOREIGN KEY (feedingTerm) REFERENCES feedingTerms (id),
-        FOREIGN KEY (metabolite, reactor) REFERENCES metabolites (id, reactor)
+        FOREIGN KEY (metabolite) REFERENCES metabolites (id)
     )""")
 
     cur.execute("""

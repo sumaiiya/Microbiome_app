@@ -6,7 +6,7 @@ import uuid
 app = Flask(__name__)
 CORS(app)
 
-DATABASE = 'microbiome.sqlite3'
+DATABASE = 'microbiomeTest.sqlite3'
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
@@ -37,8 +37,19 @@ def save_microbiome():
         return jsonify({"status": "error", "message": "Invalid JSON"}), 400
     print("Received microbiome data:", data)
     species_list = data.get("species", [])
-    metabolites_list = data.get("metabolites", [])
-    media_list = data.get("media", [])
+    #metabolites_list = data.get("metabolites", [])
+    #media_list = data.get("media", [])
+    # Automatically gather all metabolite IDs from feeding terms
+    metabolite_ids = set()
+
+    for sp in species_list:
+        for sub in sp.get("subpopulations", []):
+            for term in sub.get("feeding", []):
+                for item in term.get("in", []):
+                    metabolite_ids.add(item.get("metabolite", ""))
+                for item in term.get("out", []):
+                    metabolite_ids.add(item.get("metabolite", ""))
+
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -65,7 +76,7 @@ def save_microbiome():
                         safe_float(sub.get("mumax"), 0.4),  # Convert to float, default 0.4 if missing/invalid
                         safe_float(sub.get("pHopt"), 7.0),  
                         safe_float(sub.get("pHalpha"), 0.2),  
-                        safe_float(sub.get("count"), 1e6),  
+                        safe_float(sub.get("count"), 0),  
                         sp['color'],  
                         "active"  # Default state is active
                     )

@@ -10,14 +10,12 @@ import tempfile
 # Load simulation module from file
 module_path = "kombucha_simulation.py"
 
-#module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend', 'kombucha_simulation.py'))
-
-
 @st.cache_resource
 def load_simulation_module():
-    """Load the simulation module"""
+    """Load the kombucha simulation module"""
     if not os.path.exists(module_path):
         st.error(f"Simulation module not found at {module_path}")
+        st.info("Please ensure kombucha_simulation.py is in the same directory as this Streamlit app")
         return None
     
     try:
@@ -34,14 +32,14 @@ def load_simulation_module():
 
 # Page configuration
 st.set_page_config(
-    page_title=" Microbial Simulation",
+    page_title="Kombucha Microbial Simulation",
     page_icon="🍶",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-st.title("🍶 Microbial Simulation")
-st.markdown("Interactive simulation of microbial dynamics ")
+st.title("🍶 Kombucha Microbial Simulation")
+st.markdown("Interactive simulation of microbial dynamics in kombucha fermentation")
 
 # Load simulation module
 sim = load_simulation_module()
