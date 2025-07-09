@@ -1,0 +1,8 @@
+id	species	mumax	pHoptimal	pHalpha	count	color	state
+bb1	bb	0.5	7	50	0.01	#FF10F0	active
+bb2	bb	0.4	7	50	0.01	#D42AFF	active
+bb6	bb	0.0	7	50	0.00	#9B30FF	dead
+ki1	ki	0.5	7	10	0.01	#00C2FF	active
+ki2	ki	0.04	7	10	0.01	#00FFB2	active
+ki6	ki	0.0	7	50	0.01	#00FFB2	inactive
+

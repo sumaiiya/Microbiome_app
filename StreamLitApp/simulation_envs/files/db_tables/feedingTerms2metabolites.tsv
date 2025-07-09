@@ -1,0 +1,15 @@
+id	feedingTerm	metabolite	yield	monodK
+1	bb1_sucrose	sucrose	1	1
+2	bb1_sucrose	glucose	-1	0
+3	bb1_sucrose	fructose	-1	0
+4	bb2_glucose	glucose	1	1
+5	bb2_fructose	fructose	1	1
+6	bb2_glucose	ethanol	-1	0
+7	bb2_fructose	ethanol	-1	0
+8	ki1_ethanol	ethanol	1	1
+9	ki1_ethanol	acetate	-1	0
+10	ki2_glucose	glucose	1	1
+11	ki1_glucose	acetate	-1	0
+12	ki2_fructose	fructose	1	1
+13	ki2_fructose	acetate	-1	0	
+
