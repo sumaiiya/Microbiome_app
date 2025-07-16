@@ -668,7 +668,7 @@ class Reactor:
         
      
         
-    
+    """
     def makePlots(self, path=None):
         
         fig = make_subplots(rows = 2, cols = 2, subplot_titles = ['Metabolites', 'pH', 'Subpopulations', 'State'])
@@ -695,8 +695,74 @@ class Reactor:
             fig.write_html(path)
         
         fig.show()
-                    
-        
+       """             
+
+    def makePlots(self, path=None, return_fig=False):
+        from plotly.subplots import make_subplots
+        import plotly.graph_objs as go
+
+        fig = make_subplots(
+            rows=2, cols=2, 
+            subplot_titles=['Metabolites', 'pH', 'Subpopulations', 'State']
+        )
+
+        # Metabolites
+        for i, v in enumerate(self.metabolome.metabolites):
+            fig.add_trace(go.Scatter(
+                x=self.time_simul, y=self.met_simul[i], mode='lines', name=v, 
+                line=dict(color=self.metabolome.metD[v].color, simplify=True), opacity=0.8),
+                row=1, col=1
+            )
+
+        # pH
+        fig.add_trace(go.Scatter(
+            x=self.time_simul, y=self.pH_simul, mode='lines', name='pH', 
+            line=dict(color='rgb(57,255,20)', simplify=True), opacity=0.8),
+            row=1, col=2
+        )
+
+        # Subpopulations
+        for i, v in enumerate(self.microbiome.subpops):
+            opacity = 0.8 if self.microbiome.subpopD[v].state == 'active' else 0.1
+            fig.add_trace(go.Scatter(
+                x=self.time_simul, y=self.subpop_simul[i], mode='lines', name=v, 
+                line=dict(color=self.microbiome.subpopD[v].color, simplify=True), opacity=opacity),
+                row=2, col=1
+            )
+
+        # States: Active / Inactive / Dead
+        for i, v in enumerate(self.microbiome.species):
+            fig.add_trace(go.Scatter(
+                x=self.time_simul, y=self.cellActive_dyn[i], mode='lines', name=v + '_active', 
+                line=dict(color=self.microbiome.bacteria[v].color, width=2, simplify=True), opacity=1),
+                row=2, col=2
+            )
+            fig.add_trace(go.Scatter(
+                x=self.time_simul, y=self.cellInactive_dyn[i], mode='lines', name=v + '_inactive', 
+                line=dict(color=self.microbiome.bacteria[v].color, width=2, simplify=True), opacity=0.1),
+                row=2, col=2
+            )
+            fig.add_trace(go.Scatter(
+                x=self.time_simul, y=self.cellDead_dyn[i], mode='lines', name=v + '_dead', 
+                line=dict(color=self.microbiome.bacteria[v].color, width=2, simplify=True), opacity=0.1),
+                row=2, col=2
+            )
+
+        # Save to HTML if requested
+        if path is not None:
+            fig.write_html(path)
+
+        # ✅ Correct Streamlit-friendly return
+        if return_fig:
+            return fig
+
+        # Optional: Jupyter fallback (safe to ignore in Streamlit)
+        try:
+            fig.show()
+        except:
+            pass
+
+
 
 
         

@@ -452,6 +452,66 @@ def main(**kwargs):
         import traceback
         traceback.print_exc()
         return None
+    
+def run_direct_reactor_simulation(subpop_dict, media_dict, volume=15):
+    """
+    Direct reactor simulation using user-provided subpopulation counts and media concentrations.
+    
+    Args:
+        subpop_dict (dict): {subpop_name: count}
+        media_dict (dict): {metabolite_name: concentration}
+        volume (float): Reactor volume (default 15)
+    
+    Returns:
+        fig: plotly figure object
+    """
+
+    if not ACTUAL_DB_AVAILABLE or DB is None:
+        raise RuntimeError("Database not available. Cannot run direct simulation.")
+
+    # Create metabolome with pH modeling
+    metabolome = createMetabolome(DB, mediaName='kombucha_media', pHFunc=getpH)
+
+    # Update metabolite concentrations
+    for k, v in media_dict.items():
+        if k in metabolome.metD:
+            metabolome.metD[k].concentration = v
+        else:
+            print(f"Warning: Metabolite {k} not found in kombucha_media. Skipping.")
+
+    # Create microbiome
+    microbiome = Microbiome({
+        'bb': createBacteria(DB, speciesID='bb', mediaName='kombucha_media'),
+        'ki': createBacteria(DB, speciesID='ki', mediaName='kombucha_media')
+    })
+
+    # Update subpopulation counts
+    for k, v in subpop_dict.items():
+        if k in microbiome.subpopD:
+            microbiome.subpopD[k].count = v
+        else:
+            print(f"Warning: Subpopulation {k} not found in microbiome. Skipping.")
+
+    # Create feed for pulse (set counts to zero for microbiome_feed)
+    metabolome_feed = createMetabolome(DB, mediaName='kombucha_media', pHFunc=getpH)
+    microbiome_feed = Microbiome({
+        'bb': createBacteria(DB, speciesID='bb', mediaName='kombucha_media'),
+        'ki': createBacteria(DB, speciesID='ki', mediaName='kombucha_media')
+    })
+    for i in microbiome_feed.subpopD:
+        microbiome_feed.subpopD[i].count = 0
+
+    # Define pulse and reactor
+    pulse = Pulse(metabolome_feed, microbiome_feed, 0, 600, 1000, 0, 0, 0.0, 0.0)
+    reactor = Reactor(microbiome, metabolome, [pulse], volume)
+
+    # Run simulation
+    reactor.simulate()
+
+    # Return plotly figure
+    return reactor.makePlots(return_fig=True)
+
+
 
 if __name__ == "__main__":
     main()
