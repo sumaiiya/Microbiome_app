@@ -1,13 +1,14 @@
+import matplotlib.pyplot as plt
 import streamlit as st
 import importlib.util
 import os
 import pandas as pd
 import matplotlib
 matplotlib.use("agg")
-import matplotlib.pyplot as plt
 
 # Load simulation module from file
 module_path = "kombucha_simulation.py"
+
 
 @st.cache_resource
 def load_simulation_module():
@@ -16,7 +17,8 @@ def load_simulation_module():
         st.error(f"Simulation module not found at {module_path}")
         return None
     try:
-        spec = importlib.util.spec_from_file_location("kombucha_simulation", module_path)
+        spec = importlib.util.spec_from_file_location(
+            "kombucha_simulation", module_path)
         sim = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(sim)
         return sim
@@ -24,8 +26,10 @@ def load_simulation_module():
         st.error(f"Error loading simulation module: {e}")
         return None
 
+
 # Page setup
-st.set_page_config(page_title="Kombucha Simulation", page_icon="🍶", layout="wide")
+st.set_page_config(page_title="Kombucha Simulation",
+                   page_icon="🍶", layout="wide")
 
 st.title("🍶 Microbial Simulation Interface")
 st.markdown("Interactive simulation of Kombucha microbial dynamics")
@@ -46,8 +50,9 @@ st.success("✅ Database and classes loaded successfully!")
 
 # Simulation type selection
 sim_type = st.selectbox(
-    "Choose simulation type", 
-    ["Random Policy", "Environment Test", "State Analysis", "Direct Reactor ODE Simulation"],
+    "Choose simulation type",
+    ["Random Policy", "Environment Test",
+        "State Analysis", "Direct Reactor ODE Simulation"],
     help="Select the type of simulation to run"
 )
 
@@ -58,7 +63,8 @@ current_params = {
     "simul_time": getattr(sim, 'param_simul_time', 1),
     "simul_steps": getattr(sim, 'param_simul_steps', 100),
     "dilution": getattr(sim, 'param_dilution', 0.5),
-    "volume": getattr(sim, 'param_volume', 100),  # fix: key is 'volume', not 'param_volume'
+    # fix: key is 'volume', not 'param_volume'
+    "volume": getattr(sim, 'param_volume', 100),
     "max_dilution": getattr(sim, 'param_max_dilution', 60),
     "unit_change": getattr(sim, 'param_unit_change', 0.01),
     "target_ethanol": getattr(sim, 'param_target_ethanol', 10.0)
@@ -70,19 +76,27 @@ user_params = {}
 if sim_type != "Direct Reactor ODE Simulation":
     st.sidebar.header("Gym Simulation Parameters")
 
-    user_params['param_max_steps'] = st.sidebar.slider("Max Steps", 10, 500, current_params['max_steps'])
-    user_params['param_dilution'] = st.sidebar.slider("Dilution", 0.0, 2.0, current_params['dilution'], 0.1)
-    user_params['param_volume'] = st.sidebar.slider("Volume (L)", 50, 500, current_params['volume'])  # fixed key here
-    user_params['param_target_ethanol'] = st.sidebar.slider("Target Ethanol (g/L)", 5.0, 20.0, current_params['target_ethanol'], 0.5)
+    user_params['param_max_steps'] = st.sidebar.slider(
+        "Max Steps", 10, 500, current_params['max_steps'])
+    user_params['param_dilution'] = st.sidebar.slider(
+        "Dilution", 0.0, 2.0, current_params['dilution'], 0.1)
+    user_params['param_volume'] = st.sidebar.slider(
+        "Volume (L)", 50, 500, current_params['volume'])  # fixed key here
+    user_params['param_target_ethanol'] = st.sidebar.slider(
+        "Target Ethanol (g/L)", 5.0, 20.0, current_params['target_ethanol'], 0.5)
 
     with st.sidebar.expander("Advanced Settings"):
-        user_params['param_max_dilution'] = st.slider("Max Dilution Rate", 10, 100, current_params['max_dilution'])
-        user_params['param_unit_change'] = st.slider("Unit Change", 0.001, 0.1, current_params['unit_change'], 0.001, format="%.3f")
+        user_params['param_max_dilution'] = st.slider(
+            "Max Dilution Rate", 10, 100, current_params['max_dilution'])
+        user_params['param_unit_change'] = st.slider(
+            "Unit Change", 0.001, 0.1, current_params['unit_change'], 0.001, format="%.3f")
 else:
     st.sidebar.header("ODE Reactor Setup")
 
-    metabolome = sim.createMetabolome(sim.DB, mediaName='kombucha_media', pHFunc=sim.getpH)
-    metabolome_feed = sim.createMetabolome(sim.DB, mediaName='kombucha_media', pHFunc=sim.getpH)
+    metabolome = sim.createMetabolome(
+        sim.DB, mediaName='kombucha_media', pHFunc=sim.getpH)
+    metabolome_feed = sim.createMetabolome(
+        sim.DB, mediaName='kombucha_media', pHFunc=sim.getpH)
 
     microbiome = sim.Microbiome({
         'bb': sim.createBacteria(sim.DB, speciesID='bb', mediaName='kombucha_media'),
@@ -99,13 +113,21 @@ else:
 
     st.sidebar.subheader("Initial Subpopulation Counts")
     for sp in microbiome.subpops:
-        microbiome.subpopD[sp].count = st.sidebar.slider(f"{sp} count", 0, 1000, int(microbiome.subpopD[sp].count), 10)
+        microbiome.subpopD[sp].count = st.sidebar.slider(
+            f"{sp} count", min_value=0.0, max_value=10.0,
+            value=float(microbiome.subpopD[sp].count), step=0.5
+        )
 
     st.sidebar.subheader("Initial Media Concentrations")
     for met in metabolome.metabolites:
-        metabolome.metD[met].concentration = st.sidebar.slider(f"{met}", 0.0, 50.0, float(metabolome.metD[met].concentration), 1.0)
+        metabolome.metD[met].concentration = st.sidebar.slider(
+            f"{met} concentration", min_value=0.0, max_value=10.0,
+            value=float(metabolome.metD[met].concentration), step=0.5
+        )
 
-    volume = st.sidebar.slider("Reactor Volume (L)", 5, 50, 15)
+    volume = st.sidebar.slider(
+        "Reactor Volume (L)", min_value=5, max_value=50, value=15, step=1)
+   
 
 # Additional options
 col1, col2 = st.columns(2)
@@ -123,18 +145,21 @@ if st.button("🚀 Run Simulation", type="primary"):
 
 # Run simulation
 if st.session_state.simulation_ran:
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Results", "📈 Plots", "🔍 Analysis", "🐛 Debug"])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["📊 Results", "📈 Plots", "🔍 Analysis", "🐛 Debug"])
 
     with st.spinner("Running simulation..."):
         try:
             if sim_type == "Direct Reactor ODE Simulation":
 
-                # Use your run_direct_reactor_simulation function here
                 # Prepare subpopulation dict and media dict for the call
-                subpop_dict = {sp: microbiome.subpopD[sp].count for sp in microbiome.subpopD}
-                media_dict = {met: metabolome.metD[met].concentration for met in metabolome.metabolites}
+                subpop_dict = {
+                    sp: microbiome.subpopD[sp].count for sp in microbiome.subpopD}
+                media_dict = {
+                    met: metabolome.metD[met].concentration for met in metabolome.metabolites}
 
-                fig = sim.run_direct_reactor_simulation(subpop_dict, media_dict, volume=volume)
+                fig = sim.run_direct_reactor_simulation(
+                    subpop_dict, media_dict, volume=volume)
 
                 with tab1:
                     st.success("Direct Reactor ODE Simulation Completed")
@@ -142,12 +167,13 @@ if st.session_state.simulation_ran:
 
                 with tab4:
                     st.json({
-                        "Final Volume": float(fig.data[0].x[-1]) if fig.data else None,  # Example - customize as needed
+                        "Final Volume": float(fig.data[0].x[-1]) if fig.data else None,
                         "Note": "Add your debug info here if needed"
                     })
 
             elif sim_type == "Environment Test":
-                env = sim.KombuchaGym(max_steps=min(user_params['param_max_steps'], 50))
+                env = sim.KombuchaGym(max_steps=min(
+                    user_params['param_max_steps'], 50))
                 obs, _ = env.reset()
                 with tab1:
                     st.success("Environment created successfully!")
@@ -214,7 +240,8 @@ if st.session_state.simulation_ran:
                     st.dataframe(df)
 
                 with tab2:
-                    fig, axes = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
+                    fig, axes = plt.subplots(
+                        3, 1, figsize=(10, 8), sharex=True)
                     axes[0].plot(df.index, df['pH'], label='pH')
                     axes[1].plot(df.index, df['ethanol'], label='Ethanol')
                     axes[2].plot(df.index, df['reward'], label='Reward')

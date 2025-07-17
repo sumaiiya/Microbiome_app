@@ -22,12 +22,14 @@ def safe_float(val, default=0.0):
     except (TypeError, ValueError):
         return default
 
+
 def safe_float(val, default=0.0):
     # Helper function to safely convert values to float, fallback to default if invalid or missing
     try:
         return float(val)
     except (TypeError, ValueError):
         return default
+
 
 @app.route("/api/save_microbiome", methods=["POST"])
 def save_microbiome():
@@ -37,8 +39,8 @@ def save_microbiome():
         return jsonify({"status": "error", "message": "Invalid JSON"}), 400
     print("Received microbiome data:", data)
     species_list = data.get("species", [])
-    #metabolites_list = data.get("metabolites", [])
-    #media_list = data.get("media", [])
+    # metabolites_list = data.get("metabolites", [])
+    # media_list = data.get("media", [])
     # Automatically gather all metabolite IDs from feeding terms
     metabolite_ids = set()
 
@@ -50,14 +52,13 @@ def save_microbiome():
                 for item in term.get("out", []):
                     metabolite_ids.add(item.get("metabolite", ""))
 
-
     conn = get_db_connection()
     cur = conn.cursor()
     term_counter = 1
     try:
         # Loop through each species sent from frontend
         for sp in species_list:
-            sp_id =  sp.get('id') # Generate new unique ID for species (UUID)
+            sp_id = sp.get('id')  # Generate new unique ID for species (UUID)
             cur.execute(
                 # Insert species into DB; id, name, color
                 "INSERT OR REPLACE INTO species (id, name, color) VALUES (?, ?, ?)",
@@ -73,24 +74,24 @@ def save_microbiome():
                     (
                         sub_id,
                         sp_id,  # Foreign key to species ID, NOT species name
-                        safe_float(sub.get("mumax"), 0.4),  # Convert to float, default 0.4 if missing/invalid
-                        safe_float(sub.get("pHopt"), 7.0),  
-                        safe_float(sub.get("pHalpha"), 0.2),  
-                        safe_float(sub.get("count"), 0),  
-                        sp['color'],  
+                        # Convert to float, default 0.4 if missing/invalid
+                        safe_float(sub.get("mumax"), 0.4),
+                        safe_float(sub.get("pHopt"), 7.0),
+                        safe_float(sub.get("pHalpha"), 0.2),
+                        safe_float(sub.get("count"), 0),
+                        sp['color'],
                         sub.get("state", "active")
                     )
                 )
-               
+
                 # Now process feeding terms associated with this subpopulation
                 for term in sub.get("feeding", []):
                     term_id = term.get('name')
-                   
 
                     cur.execute(
                         # Insert feedingTerm record with id, name, and species ID (foreign key)
                         "INSERT OR REPLACE INTO feedingTerms (id, name, species) VALUES (?, ?, ?)",
-                        (term_id,term_id, sp_id)  
+                        (term_id, term_id, sp_id)
                     )
 
                     # Insert 'in' metabolites for feedingTerm
@@ -100,9 +101,11 @@ def save_microbiome():
                                VALUES (?, ?, ?, ?)""",
                             (
                                 term_id,
-                                item.get("metabolite",""),  # metabolite id
-                                safe_float(item.get("yield")),  # yield as float, safe conversion
-                                safe_float(item.get("monodK"))  # monodK as float, safe conversion
+                                item.get("metabolite", ""),  # metabolite id
+                                # yield as float, safe conversion
+                                safe_float(item.get("yield")),
+                                # monodK as float, safe conversion
+                                safe_float(item.get("monodK"))
                             )
                         )
 
@@ -113,11 +116,24 @@ def save_microbiome():
                                VALUES (?, ?, ?, ?)""",
                             (
                                 term_id,
-                                item.get("metabolite",""),
+                                item.get("metabolite", ""),
                                 safe_float(item.get("yield")),
                                 safe_float(item.get("monodK"))
                             )
                         )
+        transitions = data.get("transitions", [])
+        for tr in transitions:
+            cur.execute(
+                """INSERT OR REPLACE INTO subpopulations2subpopulations
+                (subpopulation_A, subpopulation_B, hillFunc, rate)
+                VALUES (?, ?, ?, ?)""",
+                (
+                    tr.get("subpopulation_A"),
+                    tr.get("subpopulation_B"),
+                    tr.get("hillFunc", ""),
+                    safe_float(tr.get("rate"), 0.01)
+                )
+            )
 
        # Insert metabolites with default color and MolecularWeight
         for met_id in metabolite_ids:
@@ -145,9 +161,6 @@ def save_microbiome():
                 )
             )
 
-
-      
-
         conn.commit()  # Commit all changes at once
         return jsonify({"status": "success", "message": "Data saved to database."})
 
@@ -160,6 +173,8 @@ def save_microbiome():
         # Always close DB connection
         conn.close()
 # 🔍 API to get all media metabolites and their concentrations
+
+
 @app.route("/api/get_media", methods=["GET"])
 def get_media():
     conn = get_db_connection()
@@ -218,6 +233,8 @@ def update_reactor():
 
     finally:
         conn.close()
+
+
 @app.route("/api/clear_microbiome", methods=["POST"])
 def clear_microbiome():
     conn = get_db_connection()
@@ -225,6 +242,7 @@ def clear_microbiome():
     try:
         cur.execute("DELETE FROM feedingTerms2metabolites")
         cur.execute("DELETE FROM feedingTerms")
+        cur.execute("DELETE FROM subpopulations2subpopulations")
         cur.execute("DELETE FROM subpopulations")
         cur.execute("DELETE FROM species")
         cur.execute("DELETE FROM metabolites")
@@ -239,8 +257,6 @@ def clear_microbiome():
 
     finally:
         conn.close()
-
-
 
 if __name__ == "__main__":
     app.run(debug=True)
