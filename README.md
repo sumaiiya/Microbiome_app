@@ -10,7 +10,11 @@ Follow these steps to install dependencies and launch the development server.
 cd Microbiome_app/frontend
 ```
 
+<<<<<<< HEAD
 ### Step 2: Install Dependencies and Step 3: Start the Development Server
+=======
+### 📁 Step 2: Install Dependencies and Step 3: Start the Development Server
+>>>>>>> 2bad47e0a88ccedfe5098ea6d8ef3b12a29eaf85
 ```bash
 npm install
 npm start
