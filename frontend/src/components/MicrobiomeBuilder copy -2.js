@@ -174,21 +174,21 @@ export default function MicrobiomeBuilder() {
 
 	return (
 		<div className="app-wrapper">
-			<h1 className="page-title">Microbiome Environment Builder</h1>
+
 			<div className="microbiome-container">
 				<button
-					className="clear-button"
+					className="bg-red-700 text-white px-6 py-3 rounded mt-4 mb-6"
 					onClick={handleClearMicrobiome}
 				>
 					Clear Data
 				</button>
-				
+				<h1 className="text-2xl font-bold">Microbiome Environment Builder</h1>
 
 				{/* Model + Setup */}
-			
+				<div>
 					<label className="block mb-1 font-semibold">Select Model:</label>
 					<select
-						className="model-select"
+						className="border p-2 w-1/2 mb-4"
 						value={model}
 						onChange={(e) => setModel(e.target.value)}
 					>
@@ -196,7 +196,8 @@ export default function MicrobiomeBuilder() {
 						<option value="Kinetic">Kinetic</option>
 						<option value="Stochastic">Stochastic</option>
 					</select>
-					<label className="block mb-1 font-semibold">Enter Environment Type:</label>
+					<div>
+						<label className="block mb-1 font-semibold">Enter Environment Type:</label>
 						<input
 							type="text"
 							className="border p-2"
@@ -204,11 +205,9 @@ export default function MicrobiomeBuilder() {
 							value={setup}
 							onChange={(e) => setSetup(e.target.value)}
 						/>
-					<div>
-						
 					</div>
 
-			
+				</div>
 
 				{/* Species */}
 				<div>
@@ -326,8 +325,8 @@ export default function MicrobiomeBuilder() {
 					<button className="bg-green-600 text-white px-4 py-2 rounded"
 						onClick={handleAddSpecies}>+ Add Species</button>
 				</div>
-				<div className="transitions-sidebar">
-					<h3 className="text-xl font-semibold mb-2">Transitions Between Subpopulations</h3>
+				<div className="mt-10">
+					<h2 className="text-xl font-semibold mb-2">Transitions Between Subpopulations</h2>
 					{transitions.map((tr, index) => (
 						<div key={index} className="border p-3 mb-2 rounded bg-gray-50">
 							<input className="border p-2 mr-2" placeholder="From Subpopulation ID"
@@ -373,7 +372,7 @@ export default function MicrobiomeBuilder() {
 					</button>
 				</div>
 
-				<button className="save-microbiome"
+				<button className="bg-black text-white px-6 py-3 rounded mt-6"
 					onClick={handleSubmit}>Save Microbiome</button>
 			</div>
 		</div>

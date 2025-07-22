@@ -2,13 +2,10 @@
 .app-wrapper {
   min-height: 100vh;          /* Full viewport height */
   display: flex;
-  justify-content: center; 
-  flex-direction: column;   /* Horizontal center */
+  justify-content: center;    /* Horizontal center */
   align-items: center;        /* Vertical center */
   background-color: #f5f7fa; /* Light neutral background */
   padding: 1rem;
-  
-  
 }
 
 /* Inner container - white card with shadow */
@@ -60,17 +57,11 @@
 .microbiome-container input[type="number"],
 .microbiome-container select {
   width: 100%;
-  max-width: 180px;         /* limit width for better layout control */
-  padding: 2px 5px;        /* comfy padding */
-  font-size: 14px;          /* slightly smaller, neat */
-  border: 1.5px solid #bbb; /* subtle border */
-  border-radius: 6px;       /* smooth corners */
-  background-color: #fff;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
-  cursor: text;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease-in-out;
 }
 
 .microbiome-container input[type="text"]:focus,
@@ -216,53 +207,3 @@ select:focus {
   flex-wrap: wrap;
   margin-top: 0.5rem;
 }
-
-.model-select {
-  padding: 4px 10px;
-  font-size: 14px;
-  border: 1.5px solid #ccc;
-  border-radius: 6px;
-  width: 180px;
-  cursor: pointer;
-  transition: border-color 0.2s ease-out;
-}
-
-.model-select:focus {
-  border-color: #2563eb; /* blue-600 */
-  outline: none;
-  box-shadow: 0 0 3px 1px rgba(37, 99, 235, 0.5);
-}
-
-/* Top Title */
-.page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  text-align: center;
-  margin-top: 20px;
-  margin-bottom: 30px;
-  color: hsl(161, 74%, 21%);       /* Gray-800 */
-  background: #f9fcfe;  /* Light background */
-  padding: 10px;
-  border-bottom: 2px solid #e5e7eb;
-  width: 50%;
-}
-
-.clear-button {
-  background-color: #f0f1f08e; /* Tailwind bg-red-700 */
-  color: rgb(15, 1, 1);
-  padding: 12px 24px;
-  border-radius: 8px;
- 
-  border: none;
-  cursor: pointer;
-}
-.save-microbiome {
-    display: block;
-    margin: 0 auto;
-    background-color: #259e09;
-    color: #ffffff;
-}
-
-
-
-
