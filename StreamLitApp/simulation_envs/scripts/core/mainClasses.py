@@ -11,6 +11,8 @@ from sklearn.linear_model import LinearRegression as LR
 from sklearn.linear_model import ElasticNetCV as EN
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import numpy as np
+from scipy.special import gammaln
 
 
 def getpH(metabolome, ipH_path):
@@ -159,7 +161,7 @@ class Metabolome:
         
         self.pH = self.pHFunc(self.get_concentration())
             
-    
+    """
     def __getpHFunc(self, pHFunc):
         if pHFunc is None:
             def pHFunc(metC):
@@ -167,8 +169,15 @@ class Metabolome:
             return pHFunc
         else:
             return pHFunc
+     """
+    def __getpHFunc(self, pHFunc):
+        if pHFunc is None:
+            def default_pHFunc(metC):
+                return self.pH
+            return default_pHFunc
+        else:
+            return pHFunc       
             
-        
     
     def get_concentration(self):
         self.concentration = np.array([self.metD[i].concentration for i in self.metabolites])
@@ -352,11 +361,20 @@ class Subpopulation:
     #         return self.mumax * self.count * metabV
     #     return metabolism
 
+    """
+    @staticmethod
+    def gammaD(x, alpha, beta):
+        x_safe = np.maximum(x, 1e-12)  # Avoid log(0) or log(negative)
+        return np.exp(
+            alpha * np.log(beta) - gammaln(alpha) + (alpha - 1) * np.log(x_safe) - beta * x_safe
+        )
+    """
 
     @staticmethod
     def gammaD(x, alpha, beta):
+        
         return np.exp(alpha*np.log(beta) - gammaln(alpha) + (alpha-1)*np.log(x) - beta*x)
-
+    
 class Bacteria:
     def __init__(self, species: str, subpopulations: dict, connections : dict, color = '#54f542'):
         '''
@@ -458,6 +476,8 @@ class Microbiome:
     
     def countSubpops(self):
         return np.array([max(0,self.subpopD[sp].count) for sp in self.subpops])
+        #return np.array([max(0, self.subpopD[sp].count()) for sp in self.subpops])
+        #return np.array([max(0, self.subpopD[sp].count) for sp in self.subpops])
         
         
 

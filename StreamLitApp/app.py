@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import matplotlib
 matplotlib.use("agg")
+from pony.orm import db_session
 
 # Load simulation module from file
 module_path = "kombucha_simulation.py"
@@ -17,8 +18,11 @@ def load_simulation_module():
         st.error(f"Simulation module not found at {module_path}")
         return None
     try:
-        spec = importlib.util.spec_from_file_location(
-            "kombucha_simulation", module_path)
+        spec = importlib.util.spec_from_file_location("kombucha_simulation", module_path)
+        if spec is None or spec.loader is None:
+            st.error("Could not load module spec or loader.")
+            return None
+
         sim = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(sim)
         return sim
@@ -42,11 +46,12 @@ if not getattr(sim, "ACTUAL_DB_AVAILABLE", False):
     st.error("❌ Database classes not available!")
     st.stop()
 
-if sim.DB is None:
+if getattr(sim, "DB", None) is None:
     st.error("❌ Database not found!")
     st.stop()
 
 st.success("✅ Database and classes loaded successfully!")
+print(sim)
 
 # Simulation type selection
 sim_type = st.selectbox(
@@ -58,10 +63,10 @@ sim_type = st.selectbox(
 
 # Parameter sections
 current_params = {
-    "max_steps": getattr(sim, 'param_max_steps', 240),
+    "max_steps": getattr(sim, 'param_max_steps', 5),
     "reward_scale": getattr(sim, 'param_reward_scale', 100),
     "simul_time": getattr(sim, 'param_simul_time', 1),
-    "simul_steps": getattr(sim, 'param_simul_steps', 100),
+    "simul_steps": getattr(sim, 'param_simul_steps', 5),
     "dilution": getattr(sim, 'param_dilution', 0.5),
     # fix: key is 'volume', not 'param_volume'
     "volume": getattr(sim, 'param_volume', 100),
@@ -77,7 +82,7 @@ if sim_type != "Direct Reactor ODE Simulation":
     st.sidebar.header("Gym Simulation Parameters")
 
     user_params['param_max_steps'] = st.sidebar.slider(
-        "Max Steps", 10, 500, current_params['max_steps'])
+        "Max Steps", 5, 20, current_params['max_steps'])
     user_params['param_dilution'] = st.sidebar.slider(
         "Dilution", 0.0, 2.0, current_params['dilution'], 0.1)
     user_params['param_volume'] = st.sidebar.slider(
@@ -90,7 +95,8 @@ if sim_type != "Direct Reactor ODE Simulation":
             "Max Dilution Rate", 10, 100, current_params['max_dilution'])
         user_params['param_unit_change'] = st.slider(
             "Unit Change", 0.001, 0.1, current_params['unit_change'], 0.001, format="%.3f")
-else:
+
+if sim_type == "Direct Reactor ODE Simulation":
     st.sidebar.header("ODE Reactor Setup")
 
     metabolome = sim.createMetabolome(
@@ -98,18 +104,32 @@ else:
     metabolome_feed = sim.createMetabolome(
         sim.DB, mediaName='kombucha_media', pHFunc=sim.getpH)
 
-    microbiome = sim.Microbiome({
-        'bb': sim.createBacteria(sim.DB, speciesID='bb', mediaName='kombucha_media'),
-        'ki': sim.createBacteria(sim.DB, speciesID='ki', mediaName='kombucha_media')
-    })
+    with db_session:
+        # Fetch species IDs from the DB
+        species_ids = [row[0] for row in sim.DB.execute("SELECT id FROM species") or []]
 
-    microbiome_feed = sim.Microbiome({
-        'bb': sim.createBacteria(sim.DB, speciesID='bb', mediaName='kombucha_media'),
-        'ki': sim.createBacteria(sim.DB, speciesID='ki', mediaName='kombucha_media')
-    })
+        # Create microbiome
+        microbio_dict = {}
+        for sp_id in species_ids:
+            try:
+                microbio_dict[sp_id] = sim.createBacteria(sim.DB, speciesID=sp_id, mediaName='kombucha_media')
+            except Exception as e:
+                st.warning(f"⚠️ Could not create bacteria for species '{sp_id}': {e}")
 
-    for sp in microbiome_feed.subpopD:
-        microbiome_feed.subpopD[sp].count = 0
+        microbiome = sim.Microbiome(microbio_dict)
+
+        # Create microbiome_feed (with zero-initialized subpopulations)
+        microbio_feed_dict = {}
+        for sp_id in species_ids:
+            try:
+                feed_bac = sim.createBacteria(sim.DB, speciesID=sp_id, mediaName='kombucha_media')
+                for subp in feed_bac.subpopulations.values():
+                    subp.count = 0
+                microbio_feed_dict[sp_id] = feed_bac
+            except Exception as e:
+                st.warning(f"⚠️ Could not create feed bacteria for '{sp_id}': {e}")
+
+        microbiome_feed = sim.Microbiome(microbio_feed_dict)
 
     st.sidebar.subheader("Initial Subpopulation Counts")
     for sp in microbiome.subpops:
@@ -118,16 +138,19 @@ else:
             value=float(microbiome.subpopD[sp].count), step=0.5
         )
 
+    # Allow user to adjust initial media concentrations
     st.sidebar.subheader("Initial Media Concentrations")
     for met in metabolome.metabolites:
         metabolome.metD[met].concentration = st.sidebar.slider(
-            f"{met} concentration", min_value=0.0, max_value=10.0,
-            value=float(metabolome.metD[met].concentration), step=0.5
+            f"{met} concentration",
+            min_value=0.0,
+            max_value=10.0,
+            value=float(metabolome.metD[met].concentration),
+            step=0.5,
         )
 
     volume = st.sidebar.slider(
         "Reactor Volume (L)", min_value=5, max_value=50, value=15, step=1)
-   
 
 # Additional options
 col1, col2 = st.columns(2)
@@ -140,7 +163,7 @@ with col2:
 if "simulation_ran" not in st.session_state:
     st.session_state.simulation_ran = False
 
-if st.button("🚀 Run Simulation", type="primary"):
+if st.button("🚀 Train Policy", type="primary"):
     st.session_state.simulation_ran = True
 
 # Run simulation
@@ -155,15 +178,16 @@ if st.session_state.simulation_ran:
                 # Prepare subpopulation dict and media dict for the call
                 subpop_dict = {
                     sp: microbiome.subpopD[sp].count for sp in microbiome.subpopD}
+                
                 media_dict = {
                     met: metabolome.metD[met].concentration for met in metabolome.metabolites}
 
                 fig = sim.run_direct_reactor_simulation(
                     subpop_dict, media_dict, volume=volume)
-
-                with tab1:
-                    st.success("Direct Reactor ODE Simulation Completed")
+    
+                with tab1:  
                     st.plotly_chart(fig, use_container_width=True)
+                    st.success("Reactor Simulation Completed")
 
                 with tab4:
                     st.json({
@@ -193,12 +217,12 @@ if st.session_state.simulation_ran:
                         })
 
             elif sim_type == "State Analysis":
-                env = sim.KombuchaGym(max_steps=20)
+                env = sim.KombuchaGym(max_steps=5)
                 states_data = []
                 obs, _ = env.reset()
                 states_data.append(obs.copy())
 
-                for i in range(10):
+                for i in range(3):
                     action = env.action_space.sample()
                     obs, reward, done, _, info = env.step(action)
                     states_data.append(obs.copy())
@@ -233,7 +257,16 @@ if st.session_state.simulation_ran:
 
             else:  # Random Policy
                 result = sim.main(**user_params)
-                df = pd.DataFrame(result)
+                if isinstance(result, list) and isinstance(result[0], dict):
+                    df = pd.DataFrame(result)
+                    st.success("Simulation completed.")
+                    #st.dataframe(df)
+                    #st.line_chart(df.set_index("step")[["ethanol", "acetate"]])
+
+                else:
+                    st.error("Unexpected result format. Could not convert to DataFrame.")
+                    st.write("Raw result:", result)
+                
 
                 with tab1:
                     st.subheader("Simulation Results")

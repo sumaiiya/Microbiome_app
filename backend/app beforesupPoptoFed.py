@@ -1,4 +1,3 @@
-import random
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
@@ -74,7 +73,7 @@ def save_microbiome():
                         # Convert to float, default 0.4 if missing/invalid
                         safe_float(sub.get("mumax"), 0.4),
                         safe_float(sub.get("pHopt"), 7.0),
-                        safe_float(sub.get("pHalpha"), 50),
+                        safe_float(sub.get("pHalpha"), 0.2),
                         safe_float(sub.get("count"), 0),
                         sp['color'],
                         sub.get("state", "active")
@@ -89,15 +88,6 @@ def save_microbiome():
                         # Insert feedingTerm record with id, name, and species ID (foreign key)
                         "INSERT OR REPLACE INTO feedingTerms (id, name, species) VALUES (?, ?, ?)",
                         (term_id, term_id, sp_id)
-                    )
-                     # Link subpopulation to feeding term
-                    cur.execute(
-                        """INSERT OR REPLACE INTO subpopulations2feedingTerms (subpopulation, feedingTerm)
-                        VALUES (?, ?)""",
-                        (
-                            sub_id,
-                            term_id
-                        )
                     )
 
                     # Insert 'in' metabolites for feedingTerm
@@ -145,7 +135,6 @@ def save_microbiome():
         for met_id in metabolite_ids:
             if not met_id:
                 continue  # Skip empty ids
-            color = "#%06x" % random.randint(0, 0xFFFFFF)
             cur.execute(
                 """
                 INSERT OR IGNORE INTO metabolites (id, color, MolecularWeight)
@@ -153,7 +142,7 @@ def save_microbiome():
                 """,
                 (
                     met_id,
-                    color,  # Default color
+                    "#000000",  # Default color
                     0           # Default MolecularWeight
                 )
             )

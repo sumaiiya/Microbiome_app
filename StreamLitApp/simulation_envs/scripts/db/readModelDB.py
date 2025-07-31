@@ -6,7 +6,7 @@ Created on Tue Mar 29 12:20:18 2022
 """
 
 
-from pony.orm import *
+from pony.orm import Database, db_session, select
 from pathlib import Path
 import sys
 import os
@@ -19,7 +19,7 @@ sys.path.append(os.path.join(script_dir, "simulation_envs"))
 from simulation_envs.scripts.core.mainClasses import Metabolite, Metabolome, FeedingTerm, Subpopulation, Bacteria
 
 ######################################
-"""
+
 def getTransitionFunction(statement):
     
     def tf(metObj):
@@ -27,34 +27,17 @@ def getTransitionFunction(statement):
             return 1.0
         return float(eval(statement))
     return tf
-"""
-def getTransitionFunction(statement):
-    def tf(metObj):
-        if statement == '""':
-            return 1.0
-        
-        # Remove outer quotes if present
-        clean_statement = statement.strip('"')
-        
-        # Evaluate with metObj in context
-        result = eval(clean_statement, {"metObj": metObj})
-        
-        # Handle boolean results
-        if isinstance(result, bool):
-            return 1.0 if result else 0.0
-        else:
-            return float(result)
-    
-    return tf
+
+
 
 
 
 
 ######################################
-
-def get_database(filename='db/modelDB.sqlite3'):
-    db = Database()
-    db.bind(provider='sqlite', filename=filename)
+def get_database(filename='db/modelDB.sqlite3', create_tables=True):
+    db = Database()  # create a new Database instance each call
+    db.bind(provider='sqlite', filename=filename, create_db=False)
+    db.generate_mapping(create_tables=create_tables)
     return db
 
 
@@ -85,7 +68,9 @@ def createMetabolome(db, mediaName, pH0=6.4, pHFunc=None):
     metabolites = db.select("select * from " + mediaName) #name concentration
     
     for met in metabolites:
-        metObjs.append(createMetabolite(db, met[0], met[1]))
+        #metObjs.append(createMetabolite(db, met[0], met[1]))
+        metName_clean = met[0].strip() 
+        metObjs.append(createMetabolite(db, metName_clean, met[1]))
     
     return Metabolome(metabolites = metObjs, pH = pH0, pHFunc = pHFunc)
 

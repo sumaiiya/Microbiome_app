@@ -16,11 +16,7 @@ def get_db_connection():
 def uid():
     return str(uuid.uuid4())
 
-def safe_float(val, default=0.0):
-    try:
-        return float(val)
-    except (TypeError, ValueError):
-        return default
+
 
 def safe_float(val, default=0.0):
     # Helper function to safely convert values to float, fallback to default if invalid or missing

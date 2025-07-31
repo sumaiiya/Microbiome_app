@@ -103,9 +103,13 @@ export default function MicrobiomeBuilder() {
 		let newValue = value;
 
 		if (field === "yield") {
-			const numericValue = parseFloat(value) || 0;
-			newValue = type === "in" ? -Math.abs(numericValue) : Math.abs(numericValue); // Force sign
+		const numericValue = parseFloat(value);
+		if (!isNaN(numericValue)) {
+			newValue = type === "out" ? -Math.abs(numericValue) : numericValue; // out → forced negative, in → as-is
+		} else {
+			newValue = "";
 		}
+	}
 
 		if (field === "monodK" && type === "out") {
 			newValue = 0;
@@ -194,7 +198,7 @@ export default function MicrobiomeBuilder() {
 					>
 						<option value="">-- Select Model --</option>
 						<option value="Kinetic">Kinetic</option>
-						<option value="Stochastic">Stochastic</option>
+						<option value="Stochastic">phenomenological</option>
 					</select>
 					<label className="block mb-1 font-semibold">Enter Environment Type:</label>
 						<input
