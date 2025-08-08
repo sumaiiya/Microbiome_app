@@ -188,8 +188,9 @@ class KombuchaGym(gym.Env):
     def __init__(self, max_steps=param_max_steps, reward_scale=param_reward_scale,
                  simulTime=param_simul_time, SimulSteps=param_simul_steps,
                  dilution=param_dilution, volume=param_volume,
-                 param_target_ethanol=param_target_ethanol,
+                 #param_target_ethanol=param_target_ethanol,
                  param_unit_change=param_unit_change,
+                 optimization_goals=None,
                  render_mode=None, max_dilution=param_max_dilution):
         super().__init__()
         self.current_step = 0
@@ -203,6 +204,8 @@ class KombuchaGym(gym.Env):
         self.dilution = dilution
         self.volume = volume
         self.param_target_ethanol = param_target_ethanol
+        self.optimization_goals = optimization_goals or {"ethanol": 10.0}
+
 
         if not ACTUAL_DB_AVAILABLE or DB is None:
             raise RuntimeError("Cannot create KombuchaGym: Database or classes not available")
@@ -258,6 +261,8 @@ class KombuchaGym(gym.Env):
         self.reactor.simulate()
 
         subpop_counts = {k: v.count for k, v in self.reactor.microbiome.subpopD.items()}
+        print("Subpop counts:", {k: v.count for k, v in self.reactor.microbiome.subpopD.items()})
+
         current_pH = getpH(self.reactor.metabolome.concentration)
         metabolite_conc = dict(zip(self.reactor.metabolome.metabolites, self.reactor.metabolome.concentration))
 
@@ -279,13 +284,17 @@ class KombuchaGym(gym.Env):
 
     def reward_function(self):
         try:
-            ethanol_idx = self.reactor.metabolome.metabolites.index('ethanol')
-            ethanol_conc = self.reactor.metabolome.concentration[ethanol_idx]
-            deviation = abs(ethanol_conc - self.param_target_ethanol)
-            reward = max(0.0, 1 - deviation / self.param_target_ethanol)
-            return reward
-        except (ValueError, IndexError):
+            reward = 0.0
+            for met, target in self.optimization_goals.items():
+                if met in self.reactor.metabolome.metabolites:
+                    idx = self.reactor.metabolome.metabolites.index(met)
+                    actual = self.reactor.metabolome.concentration[idx]
+                    deviation = abs(actual - target)
+                    reward += max(0.0, 1 - deviation / target)
+            return reward / len(self.optimization_goals)
+        except Exception:
             return 0.0
+
 
     def render(self):
         pass
@@ -334,7 +343,8 @@ def main(param_max_steps=5, param_dilution=0.5, param_volume=100,
             break
 
     return logs
-
+def create_environment(**kwargs):
+    return KombuchaGym(**kwargs)
 
 if __name__ == "__main__":
     results = main()

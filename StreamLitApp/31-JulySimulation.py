@@ -20,7 +20,7 @@ try:
     from simulation_envs.scripts.core.mainClasses import Microbiome, Pulse, Reactor
 
     DATABASEFOLDER = os.path.abspath(os.path.join(BASE_DIR, '..', 'backend'))
-    DATABASENAME = 'microbiomeTest.sqlite3'
+    DATABASENAME = 'kombucha.sqlite3'
     DB_PATH = os.path.join(DATABASEFOLDER, DATABASENAME)
 
     if os.path.exists(DB_PATH):
@@ -41,14 +41,14 @@ def get_all_species_ids(db):
 
 
 # Simulation parameters
-param_max_steps = 240
+param_max_steps = 5
 param_dilution = 0.5
 param_volume = 100
 param_max_dilution = 60
 param_unit_change = 0.01
 param_target_ethanol = 10.0
 param_simul_time = 1
-param_simul_steps = 100
+param_simul_steps = 5
 param_reward_scale = 100
 
 ACETATE_IDX = 0  # index for acetate metabolite
@@ -115,7 +115,7 @@ def run_direct_reactor_simulation(subpop_dict, media_dict, volume=15):
             metabolome.metD[met_name].concentration = conc
         else:
             print(f"Warning: Metabolite '{met_name}' not found in kombucha_media. Skipping.")
-
+    print([metabolome.metD[i].concentration for i in metabolome.metD])
     # Dynamically load all species and create the microbiome
     species_ids = get_all_species_ids(DB)
     microbio_dict = {}
@@ -154,7 +154,8 @@ def run_direct_reactor_simulation(subpop_dict, media_dict, volume=15):
     # Create Pulse and Reactor
     pulse = Pulse(metabolome_feed, microbiome_feed, 0, 600, 1000, 0, 0, 0.0, 0.0)
     reactor = Reactor(microbiome, metabolome, [pulse], volume)
-
+    #print(reactor.microbiome.subpopD['bb1'].feedingTerms[0].yields)
+    #['acetate', 'ethanol', 'fructose', 'glucose', 'sucrose']
     # Run simulation
     reactor.simulate()
 
@@ -189,8 +190,7 @@ class KombuchaGym(gym.Env):
                  dilution=param_dilution, volume=param_volume,
                  param_target_ethanol=param_target_ethanol,
                  param_unit_change=param_unit_change,
-                 render_mode=None, max_dilution=param_max_dilution,
-                 optimization_goals=None):
+                 render_mode=None, max_dilution=param_max_dilution):
         super().__init__()
         self.current_step = 0
         self.max_steps = max_steps
@@ -203,7 +203,6 @@ class KombuchaGym(gym.Env):
         self.dilution = dilution
         self.volume = volume
         self.param_target_ethanol = param_target_ethanol
-        self.optimization_goals = optimization_goals or {}
 
         if not ACTUAL_DB_AVAILABLE or DB is None:
             raise RuntimeError("Cannot create KombuchaGym: Database or classes not available")
@@ -292,7 +291,7 @@ class KombuchaGym(gym.Env):
         pass
 
 
-def main(param_max_steps=240, param_dilution=0.5, param_volume=100,
+def main(param_max_steps=5, param_dilution=0.5, param_volume=100,
          param_reward_scale=100, param_max_dilution=60, param_unit_change=0.01, **kwargs):
 
     env = KombuchaGym(
