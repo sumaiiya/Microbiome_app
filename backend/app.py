@@ -3,11 +3,16 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 import uuid
+from flask import redirect
+import os
 
 app = Flask(__name__)
-CORS(app)
+#CORS(app)
+CORS(app, resources={r"/api/*": {"origins": ["https://microbiome-app3.onrender.com", "https://microbiome-app-1.onrender.com"]}})
 
-DATABASE = 'kombucha.sqlite3'
+
+#DATABASE = 'kombucha.sqlite3'
+DATABASE = os.path.join(os.getcwd(), 'kombucha.sqlite3')
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
@@ -169,7 +174,8 @@ def save_microbiome():
             )
 
         conn.commit()  # Commit all changes at once
-        return jsonify({"status": "success", "message": "Data saved to database."})
+        #return jsonify({"status": "success", "message": "Data saved to database."})
+        return redirect("https://microbiome-app-1.onrender.com")
 
     except Exception as e:
         # Rollback if anything goes wrong to keep DB consistent

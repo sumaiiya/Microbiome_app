@@ -19,7 +19,7 @@ export default function MicrobiomeBuilder() {
 		}
 
 		try {
-			const response = await fetch("http://localhost:5000/api/clear_microbiome", {
+			const response = await fetch("https://microbiome-app.onrender.com/api/clear_microbiome", {
 				method: "POST",
 			});
 			const result = await response.json();
@@ -156,7 +156,7 @@ export default function MicrobiomeBuilder() {
 	const handleSubmit = async () => {
 		const reactorConfig = { model, setup, species, media, metabolites, transitions };
 		try {
-			const response = await fetch("http://localhost:5000/api/save_microbiome", {
+			const response = await fetch("https://microbiome-app.onrender.com/api/save_microbiome", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(reactorConfig),
@@ -168,7 +168,7 @@ export default function MicrobiomeBuilder() {
 			navigate("/reactor", { state: { setup } });
 
 			const encodedSetup = encodeURIComponent(setup);
-			//window.location.href = `http://localhost:8501/?setup=${encodedSetup}`;
+			//window.location.href = `https://microbiome-app-1.onrender.com?setup=${encodedSetup}`;
 		} catch (err) {
 			console.error("Failed to save data:", err);
 			alert("Failed to save data.");
