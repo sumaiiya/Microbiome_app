@@ -12,7 +12,12 @@ CORS(app, resources={r"/api/*": {"origins": ["https://microbiome-app3.onrender.c
 
 
 #DATABASE = 'kombucha.sqlite3'
-DATABASE = os.path.join(os.getcwd(), 'kombucha.sqlite3')
+#DATABASE = os.path.join(os.getcwd(), 'kombucha.sqlite3')
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # backend/
+DATABASE = os.path.join(BASE_DIR, 'kombucha.sqlite3')
+
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
