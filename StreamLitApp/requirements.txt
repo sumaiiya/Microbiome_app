@@ -1,3 +1,5 @@
 streamlit
 torch
 pony
+matplotlib
+pandas
