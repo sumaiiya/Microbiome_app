@@ -3,3 +3,4 @@ pony
 flask_cors
 streamlit
 torch
+gunicorn
