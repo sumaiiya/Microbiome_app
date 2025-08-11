@@ -17,6 +17,8 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # backend/
 DATABASE = os.path.join(BASE_DIR, 'kombucha.sqlite3')
+print(f"Using database file at: {DATABASE}")
+print("Database file exists:", os.path.exists(DATABASE))
 
 
 def get_db_connection():
@@ -36,6 +38,9 @@ def safe_float(val, default=0.0):
         return float(val)
     except (TypeError, ValueError):
         return default
+@app.route("/")
+def home():
+    return "Flask backend is running!"
 
 
 @app.route("/api/save_microbiome", methods=["POST"])
