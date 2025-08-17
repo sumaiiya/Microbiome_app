@@ -13,15 +13,17 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'simulation_envs', 'scripts', 'db'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'simulation_envs', 'scripts', 'core'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'simulation_envs', 'files'))
 
+# Define DB_PATH upfront so it exists even if imports fail
+DATABASEFOLDER = os.path.abspath(os.path.join(BASE_DIR, '..', 'backend'))
+DATABASENAME = 'kombucha.sqlite3'
+DB_PATH = os.path.join(DATABASEFOLDER, DATABASENAME)
+
 ACTUAL_DB_AVAILABLE = True
+DB = None
 
 try:
     from simulation_envs.scripts.db.readModelDB import get_database, createMetabolome, createBacteria
     from simulation_envs.scripts.core.mainClasses import Microbiome, Pulse, Reactor
-
-    DATABASEFOLDER = os.path.abspath(os.path.join(BASE_DIR, '..', 'backend'))
-    DATABASENAME = 'kombucha.sqlite3'
-    DB_PATH = os.path.join(DATABASEFOLDER, DATABASENAME)
 
     if os.path.exists(DB_PATH):
         DB = get_database(DB_PATH)
@@ -32,17 +34,16 @@ try:
 except ImportError as e:
     print(f"Warning: Could not import required modules: {e}")
     ACTUAL_DB_AVAILABLE = False
-    DB = None
-
-
-@db_session
-def get_all_species_ids(db):
-    return [row[0] for row in db.execute("SELECT id FROM species")]
 
 print("BASE_DIR:", BASE_DIR)
 print("sys.path:", sys.path)
 print("DB_PATH:", DB_PATH)
 print("DB exists?", os.path.exists(DB_PATH))
+@db_session
+def get_all_species_ids(db):
+    return [row[0] for row in db.execute("SELECT id FROM species")]
+
+
 
 # Simulation parameters
 param_max_steps = 5
