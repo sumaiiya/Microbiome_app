@@ -39,6 +39,10 @@ except ImportError as e:
 def get_all_species_ids(db):
     return [row[0] for row in db.execute("SELECT id FROM species")]
 
+print("BASE_DIR:", BASE_DIR)
+print("sys.path:", sys.path)
+print("DB_PATH:", DB_PATH)
+print("DB exists?", os.path.exists(DB_PATH))
 
 # Simulation parameters
 param_max_steps = 5
