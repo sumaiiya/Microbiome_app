@@ -78,8 +78,9 @@ print(sim)
 # Simulation type selection
 sim_type = st.selectbox(
     "Choose simulation type",
-    ["Random Policy", "Environment Test",
-     "State Analysis", "Direct Reactor ODE Simulation"],
+    ["Random Policy",
+     "State Analysis", 
+     "Direct Reactor ODE Simulation"],
     help="Select the type of simulation to run"
 )
 
@@ -240,11 +241,7 @@ if sim_type == "Direct Reactor ODE Simulation":
     volume = st.sidebar.slider(
         "Reactor Volume (L)", min_value=5, max_value=50, value=15, step=1)
 
-col1, col2 = st.columns(2)
-with col1:
-    show_debug = st.checkbox("Show Debug Info", value=False)
-with col2:
-    show_detailed_plots = st.checkbox("Show Detailed Plots", value=True)
+
 
 if "simulation_ran" not in st.session_state:
     st.session_state.simulation_ran = False
@@ -254,8 +251,8 @@ if st.button("🚀 Train Policy", type="primary"):
 
 if st.session_state.simulation_ran:
     optimization_goals = {}
-    tab1, tab2, tab3, tab4 = st.tabs(
-        ["📊 Results", "📈 Plots", "🔍 Analysis", "🐛 Debug"])
+    tab1, tab2, tab3= st.tabs(
+        ["📊 Results", "📈 Plots", "🔍 Analysis"])
 
     with st.spinner("Running simulation..."):
         try:
@@ -272,13 +269,9 @@ if st.session_state.simulation_ran:
                     st.plotly_chart(fig, use_container_width=True)
                     st.success("Reactor Simulation Completed")
 
-                with tab4:
-                    st.json({
-                        "Final Volume": float(fig.data[0].x[-1]) if fig.data else None,
-                        "Note": "Add your debug info here if needed"
-                    })
+               
 
-            elif sim_type in ["Environment Test", "State Analysis", "Random Policy"]:
+            elif sim_type in [ "State Analysis", "Random Policy"]:
                 fixed_params = fix_user_params(user_params)
                 env = sim.KombuchaGym(**fixed_params)
                 #print("Environment", env)
@@ -290,25 +283,11 @@ if st.session_state.simulation_ran:
                 pH = env.reactor.pH
                 fixed_params["optimization_goals"] = optimization_goals
 
-                if sim_type == "Environment Test":
-                    with tab1:
-                        st.success("Environment created successfully!")
-                        st.write(f"**Observation Space:** {env.observation_space}")
-                        st.write(f"**Action Space:** {env.action_space}")
-                        st.write(f"**Initial State:** {obs}")
+                
 
-                    with tab4:
-                        if show_debug:
-                            st.subheader("Debug Info")
-                            st.json({
-                                "current_step": env.current_step,
-                                "dilution": env.dilution,
-                                "volume": env.volume,
-                                "metabolites": env.reactor.metabolome.concentration,
-                                "subpops": {k: v.count for k, v in env.reactor.microbiome.subpopD.items()}
-                            })
+                    
 
-                elif sim_type == "State Analysis":
+                if sim_type == "State Analysis":
                     states_data = []
                     states_data.append(obs.copy())
 
@@ -371,6 +350,11 @@ if st.session_state.simulation_ran:
                             st.pyplot(fig)
                         else:
                             st.warning("Reward data not available.")
+                    with tab3:
+                        st.success("Environment created successfully!")
+                        st.write(f"**Observation Space:** {env.observation_space}")
+                        st.write(f"**Action Space:** {env.action_space}")
+                        st.write(f"**Initial State:** {obs}")
 
 
         except Exception as e:
