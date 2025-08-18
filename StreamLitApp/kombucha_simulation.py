@@ -7,11 +7,10 @@ from pony.orm import db_session
 import gymnasium as gym
 from gymnasium import spaces
 
-print(f"Python path: {sys.path}")
-print(f"Available files: {os.listdir('.')}")
-
 # Setup BASE_DIR and imports
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print(f"BASE_DIR: {BASE_DIR}")
+
 sys.path.insert(0, os.path.join(BASE_DIR, 'simulation_envs', 'scripts', 'db'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'simulation_envs', 'scripts', 'core'))
 sys.path.insert(0, os.path.join(BASE_DIR, 'simulation_envs', 'files'))
