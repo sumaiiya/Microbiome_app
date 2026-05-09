@@ -69,10 +69,5 @@ MSc Innovative Information Systems
 Université Toulouse Capitole
 Research Intern, INRAE
 
-
-After replacing the README, commit it with:
-
-```bash
-git add README.md
 git commit -m "Improve README for research presentation"
 git push
